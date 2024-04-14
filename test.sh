@@ -18,7 +18,7 @@ read -r response <&3
 echo "Server response: $response"
 
 # Send a test SMTP command
-echo "EHLO localhost" >&3
+echo "EHLO" >&3
 
 # Read the response from the server
 read -r response <&3

@@ -14,7 +14,7 @@ char *hello = "220 Welcome to Ganduth SMTP 0.1\r\n";
 // Handles the client connection
 void *handle_client(void *client_fd) {
   int new_socket = *(int *)client_fd;
-  char buffer[MAX_BUFFER_SIZE] = {0};
+  char *buffer = (char *)malloc(MAX_BUFFER_SIZE * sizeof(char));
 
   // Client Connected
   printf("Client Connected\n");
@@ -27,19 +27,21 @@ void *handle_client(void *client_fd) {
   while ((valread = read(new_socket, buffer, MAX_BUFFER_SIZE)) > 0) {
     printf("%s\n", buffer);
 
-    if (strncmp(buffer, "EHLO", 4) == 0) {
-      // Respond with a greeting and capabilities
-      char *response =
-          "250-localhost Hello localhost\r\n250 AUTH PLAIN LOGIN\r\n";
-      send(new_socket, response, strlen(response), 0);
-    }
-
-    // Check if the command is QUIT
-    if (strncmp(buffer, "QUIT", 4) == 0) {
-      // Respond with a farewell message
-      char *response = "221 Bye\r\n";
-      send(new_socket, response, strlen(response), 0);
-      break; // Exit the loop to close the connection
+    // Parse SMTP command and handle it
+    if (strstr(buffer, "EHLO") == buffer) {
+      // Handle HELO command
+      send(new_socket, "250 Hello\r\n", strlen("250 Hello\r\n"), 0);
+      break;
+    } else if (strstr(buffer, "MAIL FROM") == buffer) {
+      // Handle MAIL FROM command
+    } else if (strstr(buffer, "RCPT TO") == buffer) {
+      // Handle RCPT TO command
+    } else if (strstr(buffer, "DATA") == buffer) {
+      // Handle DATA command
+    } else if (strstr(buffer, "QUIT") == buffer) {
+      // Handle QUIT command
+      send(new_socket, "221 Goodbye\r\n", strlen("221 Goodbye\r\n"), 0);
+      break; // Exit loop on QUIT command
     }
 
     memset(buffer, 0, MAX_BUFFER_SIZE);
@@ -48,6 +50,7 @@ void *handle_client(void *client_fd) {
   // Close the socket
   close(new_socket);
   free(client_fd);
+  free(buffer);
   return NULL;
 }
 
